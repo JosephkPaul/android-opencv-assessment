@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "EdgeDetectionApp"
 include(":app")
+include(":OpenCV-android-sdk-4_12_0")

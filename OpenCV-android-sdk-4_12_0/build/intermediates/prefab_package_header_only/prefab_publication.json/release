@@ -1,0 +1,17 @@
+{
+  "installationFolder": "D:\\android-opencv-assessment\\OpenCV-android-sdk-4_12_0\\build\\intermediates\\prefab_package\\release\\prefab",
+  "gradlePath": ":OpenCV-android-sdk-4_12_0",
+  "packageInfo": {
+    "packageName": "OpenCV-android-sdk-4_12_0",
+    "packageSchemaVersion": 2,
+    "packageDependencies": [],
+    "modules": [
+      {
+        "moduleName": "opencv_jni_shared",
+        "moduleHeaders": "D:\\android-opencv-assessment\\OpenCV-android-sdk-4_12_0\\native\\jni\\include",
+        "moduleExportLibraries": [],
+        "abis": []
+      }
+    ]
+  }
+}

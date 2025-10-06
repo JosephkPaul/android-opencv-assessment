@@ -35,3 +35,17 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         # List libraries link to the target library
         android
         log)
+
+
+# Set the path to your downloaded OpenCV SDK
+set(OpenCV_DIR D:/Android/SDKs/OpenCV-android-sdk-4_12_0/native/jni)
+find_package(OpenCV REQUIRED)
+
+
+
+# Add OpenCV to your native library
+target_link_libraries(
+
+        ${CMAKE_PROJECT_NAME}
+        ${OpenCV_LIBS}
+)
