@@ -1,7 +1,9 @@
 package com.example.edgedetectionapp
 
+import MyGLRenderer
 import android.Manifest
 import android.content.pm.PackageManager
+import android.opengl.GLSurfaceView
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +15,10 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
+
+
+    // Add a private variable for the GLSurfaceView
+    private lateinit var glSurfaceView: GLSurfaceView
 
 
 
@@ -39,6 +45,21 @@ class MainActivity : AppCompatActivity() {
             // Request permission
             activityResultLauncher.launch(Manifest.permission.CAMERA)
         }
+
+
+        glSurfaceView = findViewById(R.id.glSurfaceView)
+
+        // Configure the GLSurfaceView
+        // Tell the view we are using OpenGL ES 2.0
+        glSurfaceView.setEGLContextClientVersion(2)
+
+        // Create an instance of our renderer
+        val renderer = MyGLRenderer()
+
+        // Set the renderer for drawing on the GLSurfaceView
+        glSurfaceView.setRenderer(renderer)
+
+
     }
 
     private fun startCamera() {
