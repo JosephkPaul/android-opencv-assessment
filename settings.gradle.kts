@@ -21,4 +21,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "EdgeDetectionApp"
 include(":app")
-include(":OpenCV-android-sdk-4_12_0")
+
+// 1. REMOVE the old incorrect include line
+// include(":OpenCV-android-sdk-4_12_0")
+
+// 2. ADD these two lines instead
+include(":sdk")
+project(":sdk").projectDir = File("D:/Android/SDKs/OpenCV-android-sdk-4_9_0/sdk")

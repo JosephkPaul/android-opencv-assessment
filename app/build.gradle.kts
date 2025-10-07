@@ -4,6 +4,7 @@ plugins {
 }
 
 android {
+    ndkVersion = "21.4.7075529"
     namespace = "com.example.edgedetectionapp"
     compileSdk = 36
 
@@ -50,8 +51,14 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
-    implementation(project(":OpenCV-android-sdk-4_12_0"))
+
+    implementation(project(":sdk"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    val cameraxVersion = "1.3.1"
+    implementation("androidx.camera:camera-core:$cameraxVersion")
+    implementation("androidx.camera:camera-camera2:$cameraxVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
+    implementation("androidx.camera:camera-view:$cameraxVersion")
 }

@@ -28,24 +28,26 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
         native-lib.cpp)
 
-# Specifies libraries CMake should link to your target library. You
-# can link libraries from various origins, such as libraries defined in this
-# build script, prebuilt third-party libraries, or Android system libraries.
-target_link_libraries(${CMAKE_PROJECT_NAME}
-        # List libraries link to the target library
-        android
-        log)
-
-
 # Set the path to your downloaded OpenCV SDK
-set(OpenCV_DIR D:/Android/SDKs/OpenCV-android-sdk-4_12_0/native/jni)
+
+set(OpenCV_DIR D:/Android/SDKs/OpenCV-android-sdk-4_9_0/sdk/native/jni)
 find_package(OpenCV REQUIRED)
 
 
 
-# Add OpenCV to your native library
+# Specifies libraries CMake should link to your target library. You
+# can link libraries from various origins, such as libraries defined in this
+# build script, prebuilt third-party libraries, or Android system libraries.
 target_link_libraries(
 
+        # List libraries link to the target library
         ${CMAKE_PROJECT_NAME}
         ${OpenCV_LIBS}
+        android
+        log
+
+
+
 )
+
+
