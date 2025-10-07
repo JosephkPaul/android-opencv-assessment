@@ -1,6 +1,5 @@
 package com.example.edgedetectionapp
 
-import MyGLRenderer
 import android.Manifest
 import android.content.pm.PackageManager
 import android.opengl.GLSurfaceView
@@ -13,15 +12,13 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import java.nio.ByteBuffer
 
 class MainActivity : AppCompatActivity() {
 
-
-    // Add a private variable for the GLSurfaceView
     private lateinit var glSurfaceView: GLSurfaceView
-
-
-
+    private lateinit var renderer: MyGLRenderer
+    private lateinit var processedBuffer: ByteBuffer
 
     // Handles the result of the permission request
     private val activityResultLauncher =
@@ -29,7 +26,6 @@ class MainActivity : AppCompatActivity() {
             if (isGranted) {
                 startCamera() // Permission granted, start the camera
             } else {
-                // Handle the case where the user denies the permission
                 Toast.makeText(this, "Camera permission is required!", Toast.LENGTH_SHORT).show()
             }
         }
@@ -38,76 +34,77 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Check if permission is already granted
+        // 1. Initialize Views and Renderer first
+        glSurfaceView = findViewById(R.id.glSurfaceView)
+        renderer = MyGLRenderer()
+
+        // 2. Configure the GLSurfaceView
+        glSurfaceView.setEGLContextClientVersion(2)
+        glSurfaceView.setRenderer(renderer)
+
+        // 3. Now, check for permissions and start the camera
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera()
         } else {
-            // Request permission
             activityResultLauncher.launch(Manifest.permission.CAMERA)
         }
-
-
-        glSurfaceView = findViewById(R.id.glSurfaceView)
-
-        // Configure the GLSurfaceView
-        // Tell the view we are using OpenGL ES 2.0
-        glSurfaceView.setEGLContextClientVersion(2)
-
-        // Create an instance of our renderer
-        val renderer = MyGLRenderer()
-
-        // Set the renderer for drawing on the GLSurfaceView
-        glSurfaceView.setRenderer(renderer)
-
-
     }
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener({
-            // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
-            // Select the back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-            // Set up the ImageAnalysis use case to get a stream of frames [cite: 25]
             val imageAnalysis = ImageAnalysis.Builder()
-                // Use the latest frame and discard old ones if processing is slow
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
 
-            // This is the core of this step.
-            // setAnalyzer provides a callback that receives a frame (ImageProxy) for processing.
+            // Initialize the output buffer once, based on the frame size
+            imageAnalysis.resolutionInfo?.let {
+                val resolution = it.resolution
+                // RGBA has 4 bytes per pixel
+                processedBuffer = ByteBuffer.allocateDirect(resolution.width * resolution.height * 4)
+            }
+
             imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this)) { imageProxy ->
-                // THIS IS WHERE YOU WILL GET EACH CAMERA FRAME!
-                // In later steps, you will pass this imageProxy to your native code.
-                // For now, it's crucial to close it to get the next frame.
-                Log.d("CameraX", "Frame received: ${imageProxy.width}x${imageProxy.height}")
+                // Ensure the buffer is initialized before using it
+                if (!::processedBuffer.isInitialized) {
+                    imageProxy.close()
+                    return@setAnalyzer
+                }
+
+                // Call our C++ function via the JNI bridge
+                NativeLib.processFrame(
+                    imageProxy.width,
+                    imageProxy.height,
+                    imageProxy.planes[0].buffer, // Y plane
+                    imageProxy.planes[1].buffer, // U plane
+                    imageProxy.planes[2].buffer, // V plane
+                    imageProxy.planes[0].rowStride,
+                    imageProxy.planes[1].rowStride,
+                    processedBuffer
+                )
+
+                // Pass the processed buffer to the OpenGL renderer
+                renderer.updateFrame(processedBuffer, imageProxy.width, imageProxy.height)
+
+                // IMPORTANT: Close the imageProxy to receive the next frame
                 imageProxy.close()
             }
 
             try {
                 // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
-
                 // Bind the camera selector and imageAnalysis use case to the activity's lifecycle
                 cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis)
-
             } catch (exc: Exception) {
                 Log.e("CameraX", "Use case binding failed", exc)
             }
 
         }, ContextCompat.getMainExecutor(this))
     }
-
-
-
-    /**
-     * A native method that is implemented by the 'edgedetectionapp' native library,
-     * which is packaged with this application.
-     */
 
     companion object {
         // Used to load the 'edgedetectionapp' library on application startup.
